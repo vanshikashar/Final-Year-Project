@@ -8,18 +8,25 @@ const rateLimit = require("express-rate-limit");
 const crypto = require("crypto");
 require("dotenv").config();
 
-// Models — filenames match your current project structure.
-const Log = require("./models/alert");
+// ==================== MODELS & SERVICES ====================
+// Your current model filename is models/alert.js.
+// Use the same Alert model in eventProcessor.js.
+
+const Log = require("./models/Log");
 const Metric = require("./models/Metric");
 const Alert = require("./models/alert");
-
-// Event processing service.
 const { processEvent } = require("./services/eventProcessor");
 
 const app = express();
+app.get("/api/test", (req, res) => {
+  console.log("TEST ENDPOINT REACHED");
+  res.json({ message: "Backend test successful" });
+});
 const PORT = Number(process.env.PORT) || 5000;
 
-// ==================== SECURITY & MIDDLEWARE ====================
+
+
+// ==================== MIDDLEWARE ====================
 
 app.use(helmet());
 
@@ -31,7 +38,6 @@ app.use(
 
 app.use(express.json({ limit: "100kb" }));
 
-// Limit ingestion requests.
 const ingestionLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 120,
@@ -39,10 +45,21 @@ const ingestionLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Protect event ingestion with an API key.
+// ==================== API KEY AUTHENTICATION ====================
+
+
 function requireIngestionKey(req, res, next) {
+  console.log("POST /api/events reached API-key middleware");
+
   const expected = process.env.INGEST_API_KEY;
   const supplied = req.get("x-api-key");
+
+  console.log("API key configured:", Boolean(expected));
+  console.log("API key received:", Boolean(supplied));
+  console.log(
+    "API key matches:",
+    Boolean(expected && supplied && expected === supplied)
+  );
 
   if (!expected || !supplied) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -58,13 +75,14 @@ function requireIngestionKey(req, res, next) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  next();
+  return next();
 }
+
 
 // ==================== HEALTH CHECK ====================
 
 app.get("/api/health", (req, res) => {
-  res.json({
+  return res.json({
     status: "ok",
     service: "cloud-security-api",
     database:
@@ -75,6 +93,10 @@ app.get("/api/health", (req, res) => {
 });
 
 // ==================== EVENT INGESTION ====================
+app.use((req, res, next) => {
+  console.log("REQUEST:", req.method, req.url);
+  next();
+});
 
 app.post(
   "/api/events",
@@ -157,10 +179,7 @@ app.get("/api/logs", async (req, res) => {
       .limit(limit)
       .lean();
 
-    return res.json({
-      count: logs.length,
-      logs,
-    });
+    return res.json({ count: logs.length, logs });
   } catch (error) {
     console.error("Logs query failed:", error.message);
 
@@ -184,10 +203,7 @@ app.get("/api/metrics", async (req, res) => {
       .limit(limit)
       .lean();
 
-    return res.json({
-      count: metrics.length,
-      metrics,
-    });
+    return res.json({ count: metrics.length, metrics });
   } catch (error) {
     console.error("Metrics query failed:", error.message);
 
@@ -199,7 +215,6 @@ app.get("/api/metrics", async (req, res) => {
 
 // ==================== ALERTS API ====================
 
-// Return recent alerts, prioritizing severity.
 app.get("/api/alerts", async (req, res) => {
   try {
     const limit = Math.min(
@@ -226,10 +241,7 @@ app.get("/api/alerts", async (req, res) => {
         new Date(b.timestamp) - new Date(a.timestamp)
     );
 
-    return res.json({
-      count: alerts.length,
-      alerts,
-    });
+    return res.json({ count: alerts.length, alerts });
   } catch (error) {
     console.error("Alerts query failed:", error.message);
 
@@ -250,27 +262,23 @@ app.patch("/api/alerts/:id/status", async (req, res) => {
   }
 
   if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({
-      error: "Invalid alert ID",
-    });
+    return res.status(400).json({ error: "Invalid alert ID" });
   }
 
   try {
-    const alert = await Alert.findByIdAndUpdate(
+    const updatedAlert = await Alert.findByIdAndUpdate(
       req.params.id,
       { $set: { status: req.body.status } },
       { new: true, runValidators: true }
     );
 
-    if (!alert) {
-      return res.status(404).json({
-        error: "Alert not found",
-      });
+    if (!updatedAlert) {
+      return res.status(404).json({ error: "Alert not found" });
     }
 
     return res.json({
       message: "Alert status updated",
-      alert,
+      alert: updatedAlert,
     });
   } catch (error) {
     console.error("Alert update failed:", error.message);
@@ -293,7 +301,6 @@ async function startServer() {
   }
 
   await mongoose.connect(process.env.MONGODB_URI);
-
   console.log("MongoDB Atlas connected successfully");
 
   app.listen(PORT, "127.0.0.1", () => {
