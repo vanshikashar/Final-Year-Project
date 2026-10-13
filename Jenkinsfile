@@ -57,15 +57,16 @@ stage('Trivy Filesystem Scan') {
 }
 
 
-        stage('Docker Compose Validation') {
-            steps {
-                sh '''
-                    docker compose config --quiet
-                    echo "Docker Compose configuration is valid"
-                '''
-            }
-        }
+        
+stage('Docker Compose Validation') {
+    steps {
+        sh '''
+            docker compose config
+            echo "Docker Compose configuration is valid"
+        '''
     }
+}
+
 
     post {
         success {
