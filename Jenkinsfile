@@ -11,7 +11,9 @@ pipeline {
         stage('Checkout Verification') {
             steps {
                 echo 'Checking SentinelOps project structure'
+
                 sh '''
+                    set -eu
                     test -d frontend
                     test -d backend
                     test -d ml-service
@@ -25,6 +27,7 @@ pipeline {
             steps {
                 dir('frontend') {
                     sh '''
+                        set -eu
                         npm ci
                         npm run build
                     '''
@@ -36,6 +39,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh '''
+                        set -eu
                         npm ci
                         node --check server.js
                     '''
@@ -43,38 +47,39 @@ pipeline {
             }
         }
 
-        
-stage('Trivy Filesystem Scan') {
-    steps {
-        sh '''
-            trivy --config /dev/null fs \
-              --scanners vuln,misconfig \
-              --ignorefile /dev/null \
-              --exit-code 0 \
-              --no-progress .
-        '''
+        stage('Trivy Filesystem Scan') {
+            steps {
+                sh '''
+                    set -eu
+                    trivy --config /dev/null fs \
+                        --scanners vuln,misconfig \
+                        --ignorefile /dev/null \
+                        --exit-code 0 \
+                        --no-progress .
+                '''
+            }
+        }
+
+        stage('Docker Compose Validation') {
+            steps {
+                sh '''
+                    set -eu
+                    docker compose config
+                    echo "Docker Compose configuration is valid"
+                '''
+            }
+        }
     }
-}
-
-
-        
-stage('Docker Compose Validation') {
-    steps {
-        sh '''
-            docker compose config
-            echo "Docker Compose configuration is valid"
-        '''
-    }
-}
-
 
     post {
         success {
             echo 'SentinelOps pipeline completed successfully!'
         }
+
         failure {
             echo 'Pipeline failed. Check Console Output for details.'
         }
+
         always {
             echo 'SentinelOps pipeline execution finished.'
         }
