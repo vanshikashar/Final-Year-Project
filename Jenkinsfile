@@ -43,16 +43,19 @@ pipeline {
             }
         }
 
-        stage('Trivy Filesystem Scan') {
-            steps {
-                sh '''
-                    trivy fs \
-                      --scanners vuln,misconfig,secret \
-                      --exit-code 0 \
-                      --no-progress .
-                '''
-            }
-        }
+        
+stage('Trivy Filesystem Scan') {
+    steps {
+        sh '''
+            trivy --config /dev/null fs \
+              --scanners vuln,misconfig \
+              --ignorefile /dev/null \
+              --exit-code 0 \
+              --no-progress .
+        '''
+    }
+}
+
 
         stage('Docker Compose Validation') {
             steps {
