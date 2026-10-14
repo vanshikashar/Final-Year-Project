@@ -1,0 +1,60 @@
+
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - echo "Installing frontend dependencies"
+      - cd "$CODEBUILD_SRC_DIR/frontend" && npm ci
+
+  pre_build:
+    commands:
+      - echo "Validating frontend"
+      - cd "$CODEBUILD_SRC_DIR/frontend" && npm run lint && npm run build
+      - echo "Checking backend syntax"
+      - cd "$CODEBUILD_SRC_DIR/backend" && node --check server.js
+      - echo "Checking Docker availability"
+      - docker version
+      - echo "Logging in to Amazon ECR"
+      - export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - export ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+      - export IMAGE_TAG=$(echo "${CODEBUILD_RESOLVED_SOURCE_VERSION}" | cut -c 1-7)
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+
+  build:
+    commands:
+      - echo "Building backend image"
+      - docker build -t "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" -t "$ECR_REGISTRY/fyp-backend:latest" -f "$CODEBUILD_SRC_DIR/backend/Dockerfile" "$CODEBUILD_SRC_DIR/backend"
+      - echo "Building ML service image"
+      - docker build -t "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" -t "$ECR_REGISTRY/fyp-ml-service:latest" -f "$CODEBUILD_SRC_DIR/ml-service/Dockerfile" "$CODEBUILD_SRC_DIR/ml-service"
+
+  post_build:
+    commands:
+      - echo "Pushing backend image"
+      - docker push "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG"
+      - docker push "$ECR_REGISTRY/fyp-backend:latest"
+      - echo "Pushing ML service image"
+      - docker push "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG"
+      - docker push "$ECR_REGISTRY/fyp-ml-service:latest"
+      - echo "Both images pushed successfully"
+      - echo "Creating ECS image definition files"
+      - cd "$CODEBUILD_SRC_DIR"
+      - printf '[{"name":"backend","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" > "$CODEBUILD_SRC_DIR/imagedefinitions-backend.json"
+      - printf '[{"name":"ml-service","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" > "$CODEBUILD_SRC_DIR/imagedefinitions-ml.json"
+      - echo "Verifying generated files"
+      - ls -l "$CODEBUILD_SRC_DIR"/imagedefinitions-*.json
+      - cat "$CODEBUILD_SRC_DIR/imagedefinitions-backend.json"
+      - cat "$CODEBUILD_SRC_DIR/imagedefinitions-ml.json"
+
+artifacts:
+  files:
+    - imagedefinitions-backend.json
+    - imagedefinitions-ml.json
+  base-directory: .
+  discard-paths: yes
+  exclude-paths:
+    - '**/node_modules/**/*'
+    - '**/.git/**/*'
+    - '**/.venv/**/*'

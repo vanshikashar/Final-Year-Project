@@ -2,7 +2,7 @@
 
 An intelligent cloud security and DevOps monitoring platform designed to monitor system metrics, identify suspicious activity, visualize security alerts, and support secure software delivery through DevOps practices.
 
-## 📌 Project Overview
+## 📌 Project Overview is given below:
 
 The **AI-Powered Smart Cloud Security & DevOps Intelligence Platform** combines cloud monitoring, security event management, anomaly detection, and DevOps workflow visualization in a unified dashboard.
 
