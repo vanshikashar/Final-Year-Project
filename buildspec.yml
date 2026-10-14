@@ -42,10 +42,18 @@ phases:
       - echo "Creating ECS image definitions"
       - printf '[{"name":"backend","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" > imagedefinitions-backend.json
       - printf '[{"name":"ml-service","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" > imagedefinitions-ml.json
+      - echo "Creating ECS image definition files"
+      - printf '[{"name":"backend","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" > imagedefinitions-backend.json
+      - printf '[{"name":"ml-service","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" > imagedefinitions-ml.json
+      - echo "Generated image definition files:"
+      - cat imagedefinitions-backend.json
+      - cat imagedefinitions-ml.json
 
 artifacts:
   files:
-    - '**/*'
+    - imagedefinitions-backend.json
+    - imagedefinitions-ml.json
+  discard-paths: yes
   exclude-paths:
     - '**/node_modules/**/*'
     - '**/.git/**/*'
