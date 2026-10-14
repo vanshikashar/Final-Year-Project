@@ -39,6 +39,9 @@ phases:
       - docker push "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG"
       - docker push "$ECR_REGISTRY/fyp-ml-service:latest"
       - echo "Both images pushed successfully"
+      - echo "Creating ECS image definitions"
+      - printf '[{"name":"backend","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" > imagedefinitions-backend.json
+      - printf '[{"name":"ml-service","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" > imagedefinitions-ml.json
 
 artifacts:
   files:
