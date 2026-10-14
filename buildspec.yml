@@ -5,34 +5,45 @@ phases:
   install:
     runtime-versions:
       nodejs: 22
-      python: 3.11
     commands:
       - echo "Installing frontend dependencies"
       - cd frontend && npm ci
-      - echo "Installing backend dependencies"
-      - cd ../backend && npm ci
-      - echo "Installing ML service dependencies"
-      - cd ../ml-service && python -m pip install --upgrade pip
-      - pip install -r requirements.txt
 
   pre_build:
     commands:
+      - echo "Validating frontend"
+      - cd "$CODEBUILD_SRC_DIR/frontend" && npm run lint && npm run build
       - echo "Checking backend syntax"
       - cd "$CODEBUILD_SRC_DIR/backend" && node --check server.js
-      - echo "Checking Python syntax"
-      - python -m compileall -q "$CODEBUILD_SRC_DIR/ml-service"
-      - echo "Validating Docker Compose"
-      - cd "$CODEBUILD_SRC_DIR" && MONGODB_URI=mongodb://localhost:27017/test docker compose config -q
+      - echo "Checking Docker availability"
+      - docker version
+      - echo "Logging in to Amazon ECR"
+      - export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+      - export ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+      - export IMAGE_TAG=$(echo "${CODEBUILD_RESOLVED_SOURCE_VERSION}" | cut -c 1-7)
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
   build:
     commands:
-      - echo "Building frontend"
-      - cd "$CODEBUILD_SRC_DIR/frontend" && npm run build
-      - echo "Validating ML application import"
-      - cd "$CODEBUILD_SRC_DIR/ml-service" && python -c "from main import app; print(app.title)"
+      - echo "Building backend image"
+      - docker build -t "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" -t "$ECR_REGISTRY/fyp-backend:latest" -f "$CODEBUILD_SRC_DIR/backend/Dockerfile" "$CODEBUILD_SRC_DIR/backend"
+      - echo "Building ML service image"
+      - docker build -t "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" -t "$ECR_REGISTRY/fyp-ml-service:latest" -f "$CODEBUILD_SRC_DIR/ml-service/Dockerfile" "$CODEBUILD_SRC_DIR/ml-service"
+
+  post_build:
+    commands:
+      - echo "Pushing backend image"
+      - docker push "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG"
+      - docker push "$ECR_REGISTRY/fyp-backend:latest"
+      - echo "Pushing ML service image"
+      - docker push "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG"
+      - docker push "$ECR_REGISTRY/fyp-ml-service:latest"
+      - echo "Both images pushed successfully"
 
 artifacts:
   files:
-    - frontend/dist/**/*
-  base-directory: frontend
-  discard-paths: no
+    - '**/*'
+  exclude-paths:
+    - '**/node_modules/**/*'
+    - '**/.git/**/*'
+    - '**/.venv/**/*'
