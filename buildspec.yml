@@ -7,7 +7,7 @@ phases:
       nodejs: 22
     commands:
       - echo "Installing frontend dependencies"
-      - cd frontend && npm ci
+      - cd "$CODEBUILD_SRC_DIR/frontend" && npm ci
 
   pre_build:
     commands:
@@ -39,20 +39,20 @@ phases:
       - docker push "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG"
       - docker push "$ECR_REGISTRY/fyp-ml-service:latest"
       - echo "Both images pushed successfully"
-      - echo "Creating ECS image definitions"
-      - printf '[{"name":"backend","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" > imagedefinitions-backend.json
-      - printf '[{"name":"ml-service","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" > imagedefinitions-ml.json
       - echo "Creating ECS image definition files"
-      - printf '[{"name":"backend","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" > imagedefinitions-backend.json
-      - printf '[{"name":"ml-service","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" > imagedefinitions-ml.json
-      - echo "Generated image definition files:"
-      - cat imagedefinitions-backend.json
-      - cat imagedefinitions-ml.json
+      - cd "$CODEBUILD_SRC_DIR"
+      - printf '[{"name":"backend","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-backend:$IMAGE_TAG" > "$CODEBUILD_SRC_DIR/imagedefinitions-backend.json"
+      - printf '[{"name":"ml-service","imageUri":"%s"}]' "$ECR_REGISTRY/fyp-ml-service:$IMAGE_TAG" > "$CODEBUILD_SRC_DIR/imagedefinitions-ml.json"
+      - echo "Verifying generated files"
+      - ls -l "$CODEBUILD_SRC_DIR"/imagedefinitions-*.json
+      - cat "$CODEBUILD_SRC_DIR/imagedefinitions-backend.json"
+      - cat "$CODEBUILD_SRC_DIR/imagedefinitions-ml.json"
 
 artifacts:
   files:
     - imagedefinitions-backend.json
     - imagedefinitions-ml.json
+  base-directory: .
   discard-paths: yes
   exclude-paths:
     - '**/node_modules/**/*'
