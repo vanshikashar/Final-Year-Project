@@ -1,0 +1,38 @@
+
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+      python: 3.11
+    commands:
+      - echo "Installing frontend dependencies"
+      - cd frontend && npm ci
+      - echo "Installing backend dependencies"
+      - cd ../backend && npm ci
+      - echo "Installing ML service dependencies"
+      - cd ../ml-service && python -m pip install --upgrade pip
+      - pip install -r requirements.txt
+
+  pre_build:
+    commands:
+      - echo "Checking backend syntax"
+      - cd "$CODEBUILD_SRC_DIR/backend" && node --check server.js
+      - echo "Checking Python syntax"
+      - python -m compileall -q "$CODEBUILD_SRC_DIR/ml-service"
+      - echo "Validating Docker Compose"
+      - cd "$CODEBUILD_SRC_DIR" && MONGODB_URI=mongodb://localhost:27017/test docker compose config -q
+
+  build:
+    commands:
+      - echo "Building frontend"
+      - cd "$CODEBUILD_SRC_DIR/frontend" && npm run build
+      - echo "Validating ML application import"
+      - cd "$CODEBUILD_SRC_DIR/ml-service" && python -c "from main import app; print(app.title)"
+
+artifacts:
+  files:
+    - frontend/dist/**/*
+  base-directory: frontend
+  discard-paths: no
