@@ -38,7 +38,9 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`app-sidebar ${open ? "sidebar-open" : "sidebar-closed"}`}
+        className={`app-sidebar ${
+          open ? "sidebar-open" : "sidebar-closed"
+        }`}
         aria-label="Main navigation"
       >
         <div className="sidebar-brand">
@@ -63,7 +65,10 @@ export default function Sidebar({
 
         <div className="sidebar-section-label">WORKSPACE</div>
 
-        <nav className="sidebar-navigation">
+        <nav
+          className="sidebar-navigation"
+          aria-label="Workspace navigation"
+        >
           {navigationItems.map(({ label, icon: Icon }) => (
             <button
               type="button"
@@ -72,15 +77,19 @@ export default function Sidebar({
                 activePage === label ? "active" : ""
               }`}
               onClick={() => onNavigate(label)}
-              aria-current={activePage === label ? "page" : undefined}
+              aria-current={
+                activePage === label ? "page" : undefined
+              }
             >
               <Icon size={19} />
-
               <span>{label}</span>
 
-              {label === "Security Alerts" && alertCount > 0 && (
-                <span className="sidebar-alert-count">{alertCount}</span>
-              )}
+              {label === "Security Alerts" &&
+                Number(alertCount) > 0 && (
+                  <span className="sidebar-alert-count">
+                    {alertCount}
+                  </span>
+                )}
             </button>
           ))}
         </nav>
@@ -89,7 +98,6 @@ export default function Sidebar({
           <div className="sidebar-security-icon">
             <ShieldCheck size={20} />
           </div>
-
           <div>
             <strong>Security Workspace</strong>
             <span>Monitoring dashboard</span>
