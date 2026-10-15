@@ -2,7 +2,7 @@
 const axios = require("axios");
 const Log = require("../models/Log");
 const Metric = require("../models/Metric");
-const Alert = require("../models/alert");
+const Alert = require("../models/Alert");
 
 const WINDOW_MS =
   Math.max(1, Number(process.env.WINDOW_SECONDS) || 60) * 1000;

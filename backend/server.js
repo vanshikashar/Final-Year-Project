@@ -14,7 +14,7 @@ require("dotenv").config();
 
 const Log = require("./models/Log");
 const Metric = require("./models/Metric");
-const Alert = require("./models/alert");
+const Alert = require("./models/Alert");
 const { processEvent } = require("./services/eventProcessor");
 
 const app = express();
