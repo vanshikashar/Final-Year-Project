@@ -9,6 +9,7 @@ import Alerts from "./pages/Alerts.jsx";
 import Logs from "./pages/Logs.jsx";
 import Pipeline from "./pages/Pipeline.jsx";
 import AuthGate from "./auth/AuthGate.jsx";
+import { LogOut, UserRound, PanelsTopLeft, Radio, ShieldAlert, RefreshCw } from "lucide-react";
 
 import {
   getHealth,
@@ -104,6 +105,16 @@ function normalizeMetrics(response, alerts = []) {
 export default function App() {
   const [activePage, setActivePage] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("sentinelopsTheme");
+    return savedTheme === "light" ? "light" : "dark";
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("sentinelopsTheme", nextTheme);
+  };
 
   const [metrics, setMetrics] = useState(INITIAL_METRICS);
   const [alerts, setAlerts] = useState([]);
@@ -431,45 +442,115 @@ export default function App() {
 
       case "My Account":
         return (
-          <section className="placeholder-page">
-            <h1>My Account</h1>
-            <p>
-              Account information for the Cloud Security DevOps Platform.
-            </p>
+          <section className="account-page">
+            <header className="account-page-header">
+              <h1>My Account</h1>
+              <p>Manage your profile and platform integration settings.</p>
+            </header>
 
-            <div className="detection-info">
-              <h3>Profile information</h3>
-
-              <div className="account-details">
-                <p>
-                  <strong>Username:</strong>{" "}
-                  {localStorage.getItem("userName") || "User"}
-                </p>
-
-                <p>
-                  <strong>Application:</strong>{" "}
-                  Cloud Security DevOps Platform
-                </p>
-
-                <p>
-                  <strong>Backend connection:</strong>{" "}
-                  {connected ? "Connected" : "Unavailable"}
-                </p>
-
-                <p>
-                  <strong>Unresolved security alerts:</strong>{" "}
-                  {unresolvedAlerts.length}
-                </p>
+            <div className="account-panel">
+              <div className="account-profile-banner">
+                <div className="account-avatar" aria-hidden="true">
+                  {(localStorage.getItem("userName") || "User")
+                    .trim()
+                    .split(/\\s+/)
+                    .slice(0, 2)
+                    .map((part) => part.charAt(0).toUpperCase())
+                    .join("")}
+                </div>
+                <div>
+                  <h2 className="account-profile-name">
+                    {localStorage.getItem("userName") || "User"}
+                  </h2>
+                  <span className="account-role">Platform Administrator</span>
+                </div>
               </div>
 
-              <button
-                type="button"
-                className="detection-button"
-                onClick={fetchDashboardData}
-                disabled={loading}
-              >
-                {loading ? "Refreshing..." : "Refresh Account Status"}
-              </button>
+              <div className="account-info-grid">
+                <div className="account-info-card">
+                  <div className="account-info-icon">
+                    <UserRound size={22} />
+                  </div>
+                  <div>
+                    <div className="account-info-label">Username</div>
+                    <div className="account-info-value">
+                      {localStorage.getItem("userName") || "User"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="account-info-card">
+                  <div className="account-info-icon">
+                    <PanelsTopLeft size={22} />
+                  </div>
+                  <div>
+                    <div className="account-info-label">Active Application</div>
+                    <div className="account-info-value">
+                      Cloud Security DevOps Platform
+                    </div>
+                  </div>
+                </div>
+
+                <div className="account-info-card">
+                  <div className="account-info-icon">
+                    <Radio size={22} />
+                  </div>
+                  <div>
+                    <div className="account-info-label">Backend Connection</div>
+                    <span
+                      className={`account-status ${
+                        connected
+                          ? "account-status-connected"
+                          : "account-status-neutral"
+                      }`}
+                    >
+                      {connected ? "Connected" : "Unavailable"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="account-info-card">
+                  <div className="account-info-icon">
+                    <ShieldAlert size={22} />
+                  </div>
+                  <div>
+                    <div className="account-info-label">
+                      Unresolved Security Alerts
+                    </div>
+                    <span className="account-status account-status-neutral">
+                      {unresolvedAlerts.length} Active Alerts
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="account-actions">
+                <button
+                  type="button"
+                  className="account-action-button account-logout-button"
+                  onClick={() => {
+                    const confirmed = window.confirm(
+                      "Are you sure you want to log out?"
+                    );
+                    if (confirmed) {
+                      window.dispatchEvent(new Event("sentinelops:logout"));
+                    }
+                  }}
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+
+                <button
+                  type="button"
+                  className="account-action-button account-refresh-button"
+                  onClick={fetchDashboardData}
+                  disabled={loading}
+                >
+                  <RefreshCw size={17} className={loading ? "spin" : ""} />
+                  {loading ? "Refreshing..." : "Refresh Account Status"}
+                </button>
+              </div>
             </div>
           </section>
         );
@@ -486,7 +567,7 @@ export default function App() {
 
  return (
   <AuthGate>
-    <div className="app-layout">
+    <div className={`app-layout theme-${theme}`}>
       <Sidebar
         activePage={activePage}
         onNavigate={navigateTo}
@@ -523,6 +604,17 @@ export default function App() {
             </div>
           )}
 
+          <div className="theme-switcher">
+            <button
+              type="button"
+              className="theme-toggle-button"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            >
+              {theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}
+            </button>
+          </div>
+
           {renderPage()}
         </main>
       </div>
@@ -530,3 +622,4 @@ export default function App() {
   </AuthGate>
   );
 }
+

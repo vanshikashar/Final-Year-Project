@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { LogOut } from "lucide-react";
 import {
   Bell,
   CircleHelp,

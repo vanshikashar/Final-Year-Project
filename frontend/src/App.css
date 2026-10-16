@@ -5536,3 +5536,900 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+
+/* My Account — modern profile layout */
+/* SentinelOps My Account redesign */
+.account-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #f8fafc;
+}
+
+.account-page-header {
+  margin-bottom: 26px;
+}
+
+.account-page-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 750;
+  letter-spacing: -0.8px;
+}
+
+.account-page-header p {
+  margin: 0;
+  color: #aebbd0;
+  font-size: 15px;
+}
+
+.account-panel {
+  padding: 24px;
+  border: 1px solid #40516d;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(24, 39, 63, 0.94), rgba(15, 26, 44, 0.98));
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+}
+
+.account-profile-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+  margin-bottom: 22px;
+  border: 1px solid #526581;
+  border-radius: 13px;
+  background: rgba(37, 57, 87, 0.38);
+}
+
+.account-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #4338ca);
+  color: white;
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+}
+
+.account-profile-name {
+  margin: 0 0 8px;
+  font-size: 23px;
+  font-weight: 650;
+}
+
+.account-role {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: #334155;
+  color: #dbeafe;
+  font-size: 12px;
+}
+
+.account-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.account-info-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #526581;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.36);
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.account-info-card:hover {
+  transform: translateY(-2px);
+  border-color: #818cf8;
+}
+
+.account-info-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #526581;
+  border-radius: 10px;
+  color: #cbd5e1;
+  background: rgba(51, 65, 85, 0.48);
+}
+
+.account-info-label {
+  margin-bottom: 6px;
+  color: #aebbd0;
+  font-size: 14px;
+}
+
+.account-info-value {
+  overflow-wrap: anywhere;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 550;
+}
+
+.account-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-status-connected {
+  color: #bbf7d0;
+  background: rgba(22, 163, 74, 0.22);
+}
+
+.account-status-connected::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.account-status-neutral {
+  color: #e2e8f0;
+  background: rgba(100, 116, 139, 0.45);
+}
+
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.account-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.account-action-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.account-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+.account-refresh-button {
+  background: linear-gradient(100deg, #536dfe, #7444e8);
+  box-shadow: 0 5px 18px rgba(99, 102, 241, 0.2);
+}
+
+.account-logout-button {
+  border-color: #7f3547;
+  background: rgba(153, 27, 55, 0.18);
+  color: #fecdd3;
+}
+
+.account-logout-button:hover {
+  background: rgba(190, 24, 93, 0.28);
+}
+
+@keyframes account-spin {
+  to { transform: rotate(360deg); }
+}
+
+.account-action-button .spin {
+  animation: account-spin 1s linear infinite;
+}
+
+@media (max-width: 680px) {
+  .account-page { padding: 14px; }
+  .account-panel { padding: 14px; }
+  .account-profile-banner { padding: 16px; }
+  .account-avatar { width: 60px; height: 60px; font-size: 21px; }
+  .account-profile-name { font-size: 19px; }
+  .account-info-grid { grid-template-columns: 1fr; }
+  .account-info-card { padding: 15px; }
+  .account-actions { flex-direction: column; }
+  .account-action-button { width: 100%; }
+}
+
+/* SentinelOps My Account redesign */
+.account-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #f8fafc;
+}
+
+.account-page-header {
+  margin-bottom: 26px;
+}
+
+.account-page-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 750;
+  letter-spacing: -0.8px;
+}
+
+.account-page-header p {
+  margin: 0;
+  color: #aebbd0;
+  font-size: 15px;
+}
+
+.account-panel {
+  padding: 24px;
+  border: 1px solid #40516d;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(24, 39, 63, 0.94), rgba(15, 26, 44, 0.98));
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+}
+
+.account-profile-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+  margin-bottom: 22px;
+  border: 1px solid #526581;
+  border-radius: 13px;
+  background: rgba(37, 57, 87, 0.38);
+}
+
+.account-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #4338ca);
+  color: white;
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+}
+
+.account-profile-name {
+  margin: 0 0 8px;
+  font-size: 23px;
+  font-weight: 650;
+}
+
+.account-role {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: #334155;
+  color: #dbeafe;
+  font-size: 12px;
+}
+
+.account-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.account-info-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #526581;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.36);
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.account-info-card:hover {
+  transform: translateY(-2px);
+  border-color: #818cf8;
+}
+
+.account-info-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #526581;
+  border-radius: 10px;
+  color: #cbd5e1;
+  background: rgba(51, 65, 85, 0.48);
+}
+
+.account-info-label {
+  margin-bottom: 6px;
+  color: #aebbd0;
+  font-size: 14px;
+}
+
+.account-info-value {
+  overflow-wrap: anywhere;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 550;
+}
+
+.account-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-status-connected {
+  color: #bbf7d0;
+  background: rgba(22, 163, 74, 0.22);
+}
+
+.account-status-connected::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+
+.account-status-neutral {
+  color: #e2e8f0;
+  background: rgba(100, 116, 139, 0.45);
+}
+
+.account-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.account-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.account-action-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.account-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+.account-refresh-button {
+  background: linear-gradient(100deg, #536dfe, #7444e8);
+  box-shadow: 0 5px 18px rgba(99, 102, 241, 0.2);
+}
+
+.account-logout-button {
+  border-color: #7f3547;
+  background: rgba(153, 27, 55, 0.18);
+  color: #fecdd3;
+}
+
+.account-logout-button:hover {
+  background: rgba(190, 24, 93, 0.28);
+}
+
+@keyframes account-spin {
+  to { transform: rotate(360deg); }
+}
+
+.account-action-button .spin {
+  animation: account-spin 1s linear infinite;
+}
+
+@media (max-width: 680px) {
+  .account-page { padding: 14px; }
+  .account-panel { padding: 14px; }
+  .account-profile-banner { padding: 16px; }
+  .account-avatar { width: 60px; height: 60px; font-size: 21px; }
+  .account-profile-name { font-size: 19px; }
+  .account-info-grid { grid-template-columns: 1fr; }
+  .account-info-card { padding: 15px; }
+  .account-actions { flex-direction: column; }
+  .account-action-button { width: 100%; }
+}
+
+/* Theme selector */
+.theme-switcher {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 16px;
+}
+
+.theme-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #475569;
+  border-radius: 10px;
+  background: #172338;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.theme-toggle-button:hover {
+  background: #263751;
+  transform: translateY(-1px);
+}
+
+/* Light theme: dashboard content and account cards */
+.app-layout.theme-light {
+  --app-bg: #f1f5f9;
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --card-bg: #ffffff;
+  --border-color: #dbe3ee;
+  --input-bg: #ffffff;
+  --table-header-bg: #eaf0f8;
+  background: #f1f5f9;
+  color: #172033;
+}
+
+.app-layout.theme-light .app-main,
+.app-layout.theme-light .app-content {
+  background: #f1f5f9;
+  color: #172033;
+}
+
+.app-layout.theme-light .placeholder-page,
+.app-layout.theme-light .detection-info,
+.app-layout.theme-light .account-panel,
+.app-layout.theme-light .account-info-card,
+.app-layout.theme-light .account-profile-banner,
+.app-layout.theme-light .placeholder-metrics > div,
+.app-layout.theme-light .detection-result-container {
+  background: #ffffff;
+  color: #172033;
+  border-color: #dbe3ee;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.app-layout.theme-light .account-page,
+.app-layout.theme-light .account-profile-name,
+.app-layout.theme-light .account-info-value,
+.app-layout.theme-light .placeholder-page h1,
+.app-layout.theme-light .placeholder-page h2,
+.app-layout.theme-light .placeholder-page h3,
+.app-layout.theme-light .placeholder-page strong,
+.app-layout.theme-light .detection-info strong {
+  color: #172033;
+}
+
+.app-layout.theme-light .account-page-header p,
+.app-layout.theme-light .account-info-label,
+.app-layout.theme-light .placeholder-page p,
+.app-layout.theme-light .placeholder-metrics span,
+.app-layout.theme-light .detection-info span {
+  color: #64748b;
+}
+
+.app-layout.theme-light .account-info-icon {
+  background: #f1f5f9;
+  border-color: #dbe3ee;
+  color: #475569;
+}
+
+.app-layout.theme-light .account-role {
+  background: #e8edff;
+  color: #3730a3;
+}
+
+.app-layout.theme-light .account-status-neutral {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.app-layout.theme-light .theme-toggle-button {
+  background: #ffffff;
+  color: #172033;
+  border-color: #cbd5e1;
+}
+
+.app-layout.theme-light .theme-toggle-button:hover {
+  background: #e8eef7;
+}
+
+.app-layout.theme-light table {
+  color: #172033;
+}
+
+.app-layout.theme-light th {
+  background: #eaf0f8;
+  color: #334155;
+}
+
+.app-layout.theme-light td {
+  border-color: #dbe3ee;
+}
+
+.app-layout.theme-light input,
+.app-layout.theme-light select,
+.app-layout.theme-light textarea {
+  background: #ffffff;
+  color: #172033;
+  border-color: #cbd5e1;
+}
+
+.app-layout.theme-light pre,
+.app-layout.theme-light .detection-result {
+  background: #f1f5f9;
+  color: #172033;
+}
+
+@media (max-width: 680px) {
+  .theme-switcher { margin-bottom: 12px; }
+  .theme-toggle-button { padding: 9px 12px; }
+}
+
+
+/* ==========================================
+   SENTINELOPS — COMPLETE LIGHT THEME OVERRIDES
+   ========================================== */
+
+.app-layout.theme-light {
+  background: #f1f5f9 !important;
+  color: #172033 !important;
+  color-scheme: light;
+}
+
+/* Main application areas */
+.app-layout.theme-light .app-main,
+.app-layout.theme-light .app-content {
+  background: #f1f5f9 !important;
+  color: #172033 !important;
+}
+
+/* Sidebar */
+.app-layout.theme-light .sidebar,
+.app-layout.theme-light aside,
+.app-layout.theme-light .app-sidebar {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: #dbe3ee !important;
+}
+
+.app-layout.theme-light .sidebar *,
+.app-layout.theme-light .app-sidebar * {
+  border-color: #dbe3ee;
+}
+
+.app-layout.theme-light .sidebar a,
+.app-layout.theme-light .sidebar button,
+.app-layout.theme-light .app-sidebar a,
+.app-layout.theme-light .app-sidebar button {
+  color: #475569;
+}
+
+.app-layout.theme-light .sidebar a:hover,
+.app-layout.theme-light .sidebar button:hover,
+.app-layout.theme-light .app-sidebar a:hover,
+.app-layout.theme-light .app-sidebar button:hover {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+}
+
+.app-layout.theme-light .sidebar .active,
+.app-layout.theme-light .sidebar .active a,
+.app-layout.theme-light .app-sidebar .active {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+}
+
+/* Top navigation */
+.app-layout.theme-light .navbar,
+.app-layout.theme-light .app-navbar,
+.app-layout.theme-light .app-header,
+.app-layout.theme-light .topbar,
+.app-layout.theme-light header {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: #dbe3ee !important;
+}
+
+.app-layout.theme-light .navbar *,
+.app-layout.theme-light .app-navbar *,
+.app-layout.theme-light .app-header *,
+.app-layout.theme-light .topbar * {
+  border-color: #dbe3ee;
+}
+
+.app-layout.theme-light .navbar button,
+.app-layout.theme-light .app-navbar button,
+.app-layout.theme-light .app-header button,
+.app-layout.theme-light .topbar button {
+  color: #334155;
+}
+
+/* Dashboard cards and charts */
+.app-layout.theme-light .metric-card,
+.app-layout.theme-light .stat-card,
+.app-layout.theme-light .dashboard-card,
+.app-layout.theme-light .chart-card,
+.app-layout.theme-light .chart-container,
+.app-layout.theme-light .metrics-card,
+.app-layout.theme-light .detection-info,
+.app-layout.theme-light .detection-result-container,
+.app-layout.theme-light .placeholder-page,
+.app-layout.theme-light .placeholder-metrics > div,
+.app-layout.theme-light .account-panel,
+.app-layout.theme-light .account-info-card,
+.app-layout.theme-light .account-profile-banner {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: #dbe3ee !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+/* Headings and normal text */
+.app-layout.theme-light h1,
+.app-layout.theme-light h2,
+.app-layout.theme-light h3,
+.app-layout.theme-light h4,
+.app-layout.theme-light p,
+.app-layout.theme-light label,
+.app-layout.theme-light .account-profile-name,
+.app-layout.theme-light .account-info-value,
+.app-layout.theme-light .placeholder-metrics strong {
+  color: #172033;
+}
+
+.app-layout.theme-light .account-page-header p,
+.app-layout.theme-light .account-info-label,
+.app-layout.theme-light .placeholder-metrics span,
+.app-layout.theme-light .placeholder-page p {
+  color: #64748b;
+}
+
+/* Recharts: chart text, grid and tooltip */
+.app-layout.theme-light .recharts-cartesian-axis-tick-value,
+.app-layout.theme-light .recharts-label {
+  fill: #64748b !important;
+}
+
+.app-layout.theme-light .recharts-cartesian-grid line {
+  stroke: #dbe3ee !important;
+}
+
+.app-layout.theme-light .recharts-legend-item-text {
+  color: #475569 !important;
+}
+
+.app-layout.theme-light .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #dbe3ee !important;
+  color: #172033 !important;
+}
+
+.app-layout.theme-light .recharts-default-tooltip,
+.app-layout.theme-light .recharts-tooltip-item,
+.app-layout.theme-light .recharts-tooltip-label {
+  color: #172033 !important;
+}
+
+/* Tables */
+.app-layout.theme-light table {
+  background: #ffffff !important;
+  color: #172033 !important;
+}
+
+.app-layout.theme-light th {
+  background: #eaf0f8 !important;
+  color: #334155 !important;
+}
+
+.app-layout.theme-light td {
+  background: #ffffff;
+  color: #334155;
+  border-color: #dbe3ee !important;
+}
+
+/* Inputs and code blocks */
+.app-layout.theme-light input,
+.app-layout.theme-light select,
+.app-layout.theme-light textarea {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.app-layout.theme-light pre,
+.app-layout.theme-light .detection-result {
+  background: #f8fafc !important;
+  color: #172033 !important;
+  border-color: #dbe3ee !important;
+}
+
+/* Theme toggle */
+.app-layout.theme-light .theme-toggle-button {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.app-layout.theme-light .theme-toggle-button:hover {
+  background: #e8eef7 !important;
+}
+
+/* Account status and profile */
+.app-layout.theme-light .account-info-icon {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #dbe3ee !important;
+}
+
+.app-layout.theme-light .account-role {
+  background: #e8edff !important;
+  color: #3730a3 !important;
+}
+
+.app-layout.theme-light .account-status-neutral {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+/* Mobile layout */
+@media (max-width: 680px) {
+  .app-layout.theme-light .sidebar,
+  .app-layout.theme-light .app-sidebar,
+  .app-layout.theme-light aside {
+    background: #ffffff !important;
+  }
+}
+
+
+/* Fix chart card and chart title in light mode */
+.app-layout.theme-light .cpu-chart-card {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border: 1px solid #dbe3ee !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+.app-layout.theme-light .cpu-chart-card h1,
+.app-layout.theme-light .cpu-chart-card h2,
+.app-layout.theme-light .cpu-chart-card h3,
+.app-layout.theme-light .cpu-chart-card h4,
+.app-layout.theme-light .cpu-chart-card p,
+.app-layout.theme-light .cpu-chart-card span,
+.app-layout.theme-light .cpu-chart-card label {
+  color: #172033 !important;
+}
+
+/* Keep chart labels readable */
+.app-layout.theme-light .cpu-chart-card .recharts-cartesian-axis-tick-value,
+.app-layout.theme-light .cpu-chart-card .recharts-label {
+  fill: #64748b !important;
+}
+
+.app-layout.theme-light .cpu-chart-card .recharts-cartesian-grid line {
+  stroke: #dbe3ee !important;
+}
+
+/* Fix top navbar and its action buttons */
+.app-layout.theme-light .app-navbar {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-bottom: 1px solid #dbe3ee !important;
+}
+
+.app-layout.theme-light .app-navbar h1,
+.app-layout.theme-light .app-navbar h2,
+.app-layout.theme-light .app-navbar p,
+.app-layout.theme-light .app-navbar span {
+  color: #172033;
+}
+
+.app-layout.theme-light .app-navbar button {
+  background-color: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.app-layout.theme-light .app-navbar button:hover {
+  background-color: #e8eef7;
+  color: #172033;
+}
+
+/* Fix sidebar using the actual layout class */
+.app-layout.theme-light .app-sidebar {
+  background: #ffffff !important;
+  color: #172033 !important;
+  border-right: 1px solid #dbe3ee !important;
+}
+
+.app-layout.theme-light .sidebar-nav-item {
+  color: #475569 !important;
+}
+
+.app-layout.theme-light .sidebar-nav-item:hover {
+  background: #eef2ff !important;
+  color: #3730a3 !important;
+}
+
+.app-layout.theme-light .sidebar-nav-active {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+}
+
+
+/* Force navbar controls to follow light theme */
+.app-layout.theme-light .app-navbar button {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #d5deea !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.app-layout.theme-light .app-navbar button svg {
+  color: #475569 !important;
+  stroke: #475569 !important;
+}
+
+.app-layout.theme-light .app-navbar button:hover {
+  background: #eef2ff !important;
+  color: #3730a3 !important;
+}
+
+.app-layout.theme-light .app-navbar button:hover svg {
+  color: #3730a3 !important;
+  stroke: #3730a3 !important;
+}
+
+/* Keep the avatar dropdown readable */
+.app-layout.theme-light .app-navbar button[aria-expanded="true"] {
+  background: #eef2ff !important;
+  color: #3730a3 !important;
+}
