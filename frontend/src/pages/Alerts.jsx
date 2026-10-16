@@ -6,9 +6,22 @@ import {
   RefreshCw,
   Filter,
   AlertTriangle,
+  X,
 } from "lucide-react";
 
 import AlertsTable from "../components/AlertsTable.jsx";
+
+const RESOLVED_STATUSES = ["resolved", "closed", "fixed"];
+
+function getStatus(alert) {
+  return String(alert?.status || "open").toLowerCase();
+}
+
+function getSeverity(alert) {
+  return String(
+    alert?.severity || alert?.level || "low"
+  ).toLowerCase();
+}
 
 function Alerts({
   alerts = [],
@@ -19,45 +32,43 @@ function Alerts({
   const [searchTerm, setSearchTerm] = useState("");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [actionError, setActionError] = useState("");
+
+  const safeAlerts = Array.isArray(alerts) ? alerts : [];
 
   const filteredAlerts = useMemo(() => {
-    return alerts.filter((alert) => {
-      const title =
-        alert.title || alert.type || alert.name || "";
+    const query = searchTerm.trim().toLowerCase();
 
-      const message =
-        alert.message || alert.description || "";
+    return safeAlerts.filter((alert) => {
+      const searchableValues = [
+        alert.title,
+        alert.type,
+        alert.name,
+        alert.message,
+        alert.description,
+        alert.source,
+        alert.service,
+        alert.ip,
+        alert.ipAddress,
+        alert.sourceIp,
+        alert.source_ip,
+        alert._id,
+        alert.id,
+      ];
 
-      const source =
-        alert.source || alert.service || "";
+      const matchesSearch =
+        !query ||
+        searchableValues.some((value) =>
+          String(value ?? "").toLowerCase().includes(query)
+        );
 
-      const severity = String(
-        alert.severity || alert.level || "low"
-      ).toLowerCase();
-
-      const status = String(
-        alert.status || "open"
-      ).toLowerCase();
-
-      const query = searchTerm.trim().toLowerCase();
-
-      const matchesSearch = [
-        title,
-        message,
-        source,
-      ].some((value) =>
-        String(value).toLowerCase().includes(query)
-      );
+      const severity = getSeverity(alert);
+      const status = getStatus(alert);
+      const isResolved = RESOLVED_STATUSES.includes(status);
 
       const matchesSeverity =
         severityFilter === "all" ||
         severity === severityFilter;
-
-      const isResolved = [
-        "resolved",
-        "closed",
-        "fixed",
-      ].includes(status);
 
       const matchesStatus =
         statusFilter === "all" ||
@@ -71,34 +82,36 @@ function Alerts({
       );
     });
   }, [
-    alerts,
+    safeAlerts,
     searchTerm,
     severityFilter,
     statusFilter,
   ]);
 
-  const openCount = alerts.filter((alert) => {
-    const status = String(
-      alert.status || "open"
-    ).toLowerCase();
+  const openCount = safeAlerts.filter(
+    (alert) => !RESOLVED_STATUSES.includes(getStatus(alert))
+  ).length;
 
-    return !["resolved", "closed", "fixed"].includes(
-      status
-    );
-  }).length;
-
-  const criticalCount = alerts.filter((alert) => {
-    const severity = String(
-      alert.severity || alert.level || ""
-    ).toLowerCase();
-
+  const criticalCount = safeAlerts.filter((alert) => {
     return (
-      ["critical", "high"].includes(severity) &&
-      !["resolved", "closed", "fixed"].includes(
-        String(alert.status || "open").toLowerCase()
-      )
+      ["critical", "high"].includes(getSeverity(alert)) &&
+      !RESOLVED_STATUSES.includes(getStatus(alert))
     );
   }).length;
+
+  async function handleResolve(alertId) {
+    if (!alertId || !onResolveAlert) return;
+
+    setActionError("");
+
+    try {
+      await onResolveAlert(alertId);
+    } catch (error) {
+      setActionError(
+        error?.message || "Unable to resolve this alert."
+      );
+    }
+  }
 
   return (
     <main className="alerts-page">
@@ -111,8 +124,8 @@ function Alerts({
           <h1>Security Alerts</h1>
 
           <p>
-            Review suspicious activity, investigate
-            anomalies, and manage security events.
+            Review suspicious activity, investigate anomalies,
+            and manage security events.
           </p>
         </div>
 
@@ -126,7 +139,7 @@ function Alerts({
             size={16}
             className={loading ? "alerts-refresh-spin" : ""}
           />
-          Refresh
+          {loading ? "Refreshing..." : "Refresh"}
         </button>
       </section>
 
@@ -135,9 +148,8 @@ function Alerts({
           <div className="alerts-summary-icon">
             <ShieldAlert size={19} />
           </div>
-
           <span>Total alerts</span>
-          <strong>{alerts.length}</strong>
+          <strong>{safeAlerts.length}</strong>
           <small>Events returned by the API</small>
         </div>
 
@@ -145,7 +157,6 @@ function Alerts({
           <div className="alerts-summary-icon warning">
             <AlertTriangle size={19} />
           </div>
-
           <span>Open alerts</span>
           <strong>{openCount}</strong>
           <small>Awaiting resolution</small>
@@ -155,7 +166,6 @@ function Alerts({
           <div className="alerts-summary-icon danger">
             <ShieldAlert size={19} />
           </div>
-
           <span>High priority</span>
           <strong>{criticalCount}</strong>
           <small>Open high or critical events</small>
@@ -174,7 +184,7 @@ function Alerts({
 
             <input
               type="search"
-              placeholder="Search title, message, or source..."
+              placeholder="Search title, IP, message, or source..."
               value={searchTerm}
               onChange={(event) =>
                 setSearchTerm(event.target.value)
@@ -209,16 +219,57 @@ function Alerts({
           </select>
         </div>
 
-        <p className="alerts-filter-result">
-          Showing {filteredAlerts.length} of {alerts.length} alerts
+        <p className="alerts-filter-result" aria-live="polite">
+          Showing {filteredAlerts.length} of {safeAlerts.length} alerts
         </p>
       </section>
 
-      <AlertsTable
-        alerts={filteredAlerts}
-        loading={loading}
-        onResolve={onResolveAlert}
-      />
+      {actionError && (
+        <div className="app-error-message" role="alert">
+          <span>{actionError}</span>
+          <button
+            type="button"
+            onClick={() => setActionError("")}
+            aria-label="Dismiss error"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      {!loading && safeAlerts.length === 0 ? (
+        <section className="alerts-filter-panel">
+          <h3>No security alerts returned</h3>
+          <p>
+            The API returned no alert records. Refresh or check
+            the backend if you expected to see alerts.
+          </p>
+        </section>
+      ) : !loading && filteredAlerts.length === 0 ? (
+        <section className="alerts-filter-panel">
+          <h3>No matching alerts</h3>
+          <p>
+            Try changing your search term or clearing the filters.
+          </p>
+          <button
+            type="button"
+            className="alerts-refresh-button"
+            onClick={() => {
+              setSearchTerm("");
+              setSeverityFilter("all");
+              setStatusFilter("all");
+            }}
+          >
+            Clear filters
+          </button>
+        </section>
+      ) : (
+        <AlertsTable
+          alerts={filteredAlerts}
+          loading={loading}
+          onResolve={handleResolve}
+        />
+      )}
     </main>
   );
 }

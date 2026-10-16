@@ -9,6 +9,7 @@ import Alerts from "./pages/Alerts.jsx";
 import Logs from "./pages/Logs.jsx";
 import Pipeline from "./pages/Pipeline.jsx";
 import AuthGate from "./auth/AuthGate.jsx";
+import Metrics from "./pages/MetricsPage.jsx";
 import { LogOut, UserRound, PanelsTopLeft, Radio, ShieldAlert, RefreshCw } from "lucide-react";
 
 import {
@@ -128,6 +129,12 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [detectionResult, setDetectionResult] = useState(null);
 
+  // AWS CodePipeline page state
+  const [pipelineData, setPipelineData] = useState(null);
+  const [pipelineLoading, setPipelineLoading] = useState(false);
+  const [pipelineError, setPipelineError] = useState("");
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+
   const alertsRef = useRef([]);
 
   alertsRef.current = alerts;
@@ -187,14 +194,15 @@ export default function App() {
         setMetrics(nextMetrics);
 
         setCpuHistory((previous) => {
-          const point = {
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-            cpu: nextMetrics.cpu,
-          };
+         const point = {
+  time: new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }),
+  cpu: nextMetrics.cpu,
+  memory: nextMetrics.memory,
+};
 
           return [...previous, point].slice(-12);
         });
@@ -233,6 +241,97 @@ export default function App() {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  const fetchPipelineData = useCallback(async () => {
+    setPipelineLoading(true);
+    setPipelineError("");
+
+    try {
+      const token = localStorage.getItem("sentinelopsToken");
+      const apiBaseUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+      const response = await fetch(`${apiBaseUrl}/api/pipeline`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `Could not load pipeline data (HTTP ${response.status}).`
+        );
+      }
+
+      setPipelineData(data);
+    } catch (error) {
+      console.error("Pipeline refresh failed:", error);
+      setPipelineError(error.message || "Could not load pipeline data.");
+    } finally {
+      setPipelineLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activePage === "DevOps Pipeline") {
+      fetchPipelineData();
+    }
+  }, [activePage, fetchPipelineData]);
+
+  const handleRunPipeline = async (pipelineName) => {
+    if (pipelineRunning) return;
+
+    const selectedPipeline = pipelineName || "fyp-develop-pipeline";
+    const confirmed = window.confirm(
+      `Start AWS pipeline "${selectedPipeline}"? This can trigger a real deployment.`
+    );
+
+    if (!confirmed) return;
+
+    setPipelineRunning(true);
+    setPipelineError("");
+
+    try {
+      const token = localStorage.getItem("sentinelopsToken");
+
+      if (!token) {
+        throw new Error("Please log in again before running a pipeline.");
+      }
+
+      const apiBaseUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+      const response = await fetch(`${apiBaseUrl}/api/pipeline/run`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: selectedPipeline }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `Failed to start pipeline (HTTP ${response.status}).`
+        );
+      }
+
+      window.alert(
+        `Pipeline start requested. Execution ID: ${
+          data.executionId || "Check AWS CodePipeline for the execution."
+        }`
+      );
+
+      await fetchPipelineData();
+    } catch (error) {
+      console.error("Pipeline execution failed:", error);
+      setPipelineError(error.message || "Failed to start the pipeline.");
+    } finally {
+      setPipelineRunning(false);
+    }
+  };
 
   const handleResolveAlert = async (alertId) => {
     if (!alertId) return;
@@ -312,15 +411,17 @@ export default function App() {
   const renderPage = () => {
     switch (activePage) {
       case "Overview":
-        return (
-          <Dashboard
-            metrics={metrics}
-            alerts={alerts}
-            cpuHistory={cpuHistory}
-            loading={loading}
-            onResolveAlert={handleResolveAlert}
-          />
-        );
+  return (
+    <Dashboard
+      metrics={metrics}
+      alerts={alerts}
+      cpuHistory={cpuHistory}
+      loading={loading}
+      connected={connected}
+      onResolveAlert={handleResolveAlert}
+      onRefresh={fetchDashboardData}
+    />
+  );
 
       case "Security Alerts":
         return (
@@ -342,55 +443,29 @@ export default function App() {
         );
 
       case "System Metrics":
-        return (
-          <section className="placeholder-page">
-            <h1>System Metrics</h1>
-            <p>Latest metrics returned by your backend.</p>
+  return (
+    <Metrics
+      metrics={metrics}
+      cpuHistory={cpuHistory}
+      loading={loading}
+      onRefresh={fetchDashboardData}
+    />
+  );
 
-            <div className="placeholder-metrics">
-              <div>
-                <span>CPU Usage</span>
-                <strong>{metrics.cpu}%</strong>
-              </div>
+      
+      case "ML Detection": {
+        const result = detectionResult;
+        const isAnomaly =
+          result?.is_anomaly === true ||
+          result?.isAnomaly === true;
 
-              <div>
-                <span>Memory Usage</span>
-                <strong>{metrics.memory}%</strong>
-              </div>
+        const severity = result?.severity ?? "Unknown";
+        const label = result?.label ?? "No prediction";
+        const score = result?.score;
+        const recommendation =
+          result?.recommendation ??
+          "No recommendation was provided by the detection service.";
 
-              <div>
-                <span>Requests Processed</span>
-                <strong>{metrics.requests.toLocaleString()}</strong>
-              </div>
-
-              <div>
-                <span>Failed Logins</span>
-                <strong>{metrics.failedLogins}</strong>
-              </div>
-
-              <div>
-                <span>Network Traffic</span>
-                <strong>{metrics.networkTraffic}</strong>
-              </div>
-
-              <div>
-                <span>Error Count</span>
-                <strong>{metrics.errorCount}</strong>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="detection-button"
-              onClick={fetchDashboardData}
-              disabled={loading}
-            >
-              {loading ? "Refreshing..." : "Refresh Metrics"}
-            </button>
-          </section>
-        );
-
-      case "ML Detection":
         return (
           <section className="placeholder-page">
             <h1>ML Anomaly Detection</h1>
@@ -415,28 +490,85 @@ export default function App() {
                   : "Run Anomaly Detection"}
               </button>
 
-              {detectionResult !== null && (
+              {result !== null && result !== undefined && (
                 <div className="detection-result-container">
-                  <h3>Detection Response</h3>
+                  <h3>Detection Summary</h3>
+
+                  <div className="detection-summary">
+                    <div className="detection-summary-item">
+                      <span>Prediction</span>
+                      <strong>{String(label)}</strong>
+                    </div>
+
+                    <div className="detection-summary-item">
+                      <span>Status</span>
+                      <strong
+                        className={
+                          isAnomaly
+                            ? "detection-status-danger"
+                            : "detection-status-safe"
+                        }
+                      >
+                        {isAnomaly
+                          ? "Anomaly Detected"
+                          : result?.is_anomaly === false ||
+                            result?.isAnomaly === false
+                          ? "No Anomaly Detected"
+                          : "Check Model Response"}
+                      </strong>
+                    </div>
+
+                    <div className="detection-summary-item">
+                      <span>Severity</span>
+                      <strong>{String(severity)}</strong>
+                    </div>
+
+                    {typeof score === "number" && (
+                      <div className="detection-summary-item">
+                        <span>Model Score</span>
+                        <strong>{score.toFixed(6)}</strong>
+                      </div>
+                    )}
+
+                    <div className="detection-summary-item">
+                      <span>Recommendation</span>
+                      <p>{String(recommendation)}</p>
+                    </div>
+
+                    <small>
+                      Score is the raw model output, not a confidence
+                      percentage unless your model defines it that way.
+                    </small>
+                  </div>
+
+                  <h3>Full Detection Response</h3>
                   <pre className="detection-result">
-                    {JSON.stringify(detectionResult, null, 2)}
+                    {JSON.stringify(result, null, 2)}
                   </pre>
                 </div>
               )}
 
               <small>
-                The result comes from the backend response and its
-                connected ML detection service.
+                Results are returned by the backend and its connected
+                ML detection service.
               </small>
             </div>
           </section>
         );
+      }
+
 
       case "DevOps Pipeline":
         return (
           <Pipeline
-            loading={loading}
-            onRefresh={fetchDashboardData}
+            loading={pipelineLoading}
+            onRefresh={fetchPipelineData}
+            onRunPipeline={handleRunPipeline}
+            pipelineStatus={pipelineData?.status || "Unknown"}
+            stages={pipelineData?.stages || []}
+            runs={pipelineData?.runs || []}
+            pipelineError={pipelineError}
+            running={pipelineRunning}
           />
         );
 

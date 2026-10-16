@@ -34,7 +34,14 @@ function MetricCard({
 }) {
   const Icon = iconMap[type] || Activity;
   const color = colorMap[type] || "blue";
-  const isNegative = Number(change) < 0;
+  const numericChange = Number(change);
+  const hasChange =
+    change !== undefined &&
+    change !== null &&
+    change !== "" &&
+    Number.isFinite(numericChange);
+
+  const isNegative = numericChange < 0;
 
   return (
     <div className="metric-card">
@@ -42,28 +49,28 @@ function MetricCard({
         <span className="metric-title">{title}</span>
 
         <div className={`metric-icon ${color}`}>
-          <Icon size={20} />
+          <Icon size={20} aria-hidden="true" />
         </div>
       </div>
 
       <div className="metric-value">
-        <span>{value ?? "--"}</span>
+        <span>{value ?? "N/A"}</span>
         {unit && <small>{unit}</small>}
       </div>
 
       <div className="metric-card-footer">
-        {change !== undefined && change !== null && (
+        {hasChange && (
           <span
             className={`metric-change ${
               isNegative ? "positive" : "neutral"
             }`}
           >
             {isNegative ? (
-              <TrendingDown size={14} />
+              <TrendingDown size={14} aria-hidden="true" />
             ) : (
-              <TrendingUp size={14} />
+              <TrendingUp size={14} aria-hidden="true" />
             )}
-            {Math.abs(Number(change))}%
+            {Math.abs(numericChange)}%
           </span>
         )}
 

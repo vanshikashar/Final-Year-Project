@@ -1,39 +1,98 @@
 
 import { useMemo, useState } from "react";
-import { Search, RefreshCw, FileText } from "lucide-react";
+import {
+  Search,
+  RefreshCw,
+  FileText,
+  ArrowDownUp,
+} from "lucide-react";
+
+const getStatus = (log) =>
+  String(log?.status || "unknown").toLowerCase();
+
+const getEvent = (log) =>
+  String(log?.eventType || log?.event || "").toLowerCase();
+
+const isFailedLog = (log) => {
+  const status = getStatus(log);
+  const event = getEvent(log);
+
+  return (
+    ["failed", "error", "failure"].includes(status) ||
+    event.includes("error") ||
+    event.includes("failed") ||
+    Number(
+      log?.metrics?.error_count ??
+      log?.metrics?.errorCount ??
+      log?.error_count ??
+      log?.errorCount ??
+      0
+    ) > 0
+  );
+};
 
 function Logs({ logs = [], loading = false, onRefresh }) {
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+
+  const safeLogs = Array.isArray(logs) ? logs : [];
 
   const filteredLogs = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return logs.filter((log) => {
-      const message = String(log.message || "");
-      const source = String(log.source || log.service || "");
-      const event = String(log.eventType || log.event || "");
-      const status = String(log.status || "");
-      const text = `${message} ${source} ${event} ${status}`.toLowerCase();
+    return safeLogs
+      .filter((log) => {
+        const searchableValues = [
+          log.message,
+          log.source,
+          log.service,
+          log.eventType,
+          log.event,
+          log.status,
+          log.ip,
+          log.ipAddress,
+          log.sourceIp,
+          log.source_ip,
+          log.user,
+          log.userId,
+          log._id,
+        ];
 
-      const matchesSearch = !query || text.includes(query);
+        const text = searchableValues
+          .map((value) => String(value ?? ""))
+          .join(" ")
+          .toLowerCase();
 
-      const failed =
-        status.toLowerCase() === "failed" ||
-        status.toLowerCase() === "error" ||
-        event.toLowerCase().includes("error") ||
-        event.toLowerCase().includes("failed") ||
-        Number(log.metrics?.error_count ?? log.metrics?.errorCount ?? 0) > 0;
+        const matchesSearch = !query || text.includes(query);
+        const status = getStatus(log);
+        const failed = isFailedLog(log);
 
-      const matchesLevel =
-        level === "all" ||
-        (level === "error" && failed) ||
-        (level === "success" && status.toLowerCase() === "success") ||
-        (level === "failed" && status.toLowerCase() === "failed");
+        const matchesLevel =
+          level === "all" ||
+          (level === "error" && failed) ||
+          (level === "failed" &&
+            ["failed", "failure"].includes(status)) ||
+          (level === "success" && status === "success");
 
-      return matchesSearch && matchesLevel;
-    });
-  }, [logs, search, level]);
+        return matchesSearch && matchesLevel;
+      })
+      .sort((a, b) => {
+        const aTime = new Date(
+          a.timestamp || a.createdAt || 0
+        ).getTime();
+
+        const bTime = new Date(
+          b.timestamp || b.createdAt || 0
+        ).getTime();
+
+        return sortOrder === "newest"
+          ? bTime - aTime
+          : aTime - bTime;
+      });
+  }, [safeLogs, search, level, sortOrder]);
+
+  const failedCount = safeLogs.filter(isFailedLog).length;
 
   const formatTime = (value) => {
     if (!value) return "—";
@@ -49,18 +108,26 @@ function Logs({ logs = [], loading = false, onRefresh }) {
     <section className="logs-page">
       <div className="logs-heading">
         <div>
-          <span className="dashboard-eyebrow">SYSTEM ACTIVITY</span>
+          <span className="dashboard-eyebrow">
+            SYSTEM ACTIVITY
+          </span>
           <h1>Application Logs</h1>
-          <p>Search and review events returned by your backend.</p>
+          <p>
+            Search, filter, and investigate events returned
+            by your backend.
+          </p>
         </div>
 
         <button
           type="button"
           className="logs-refresh-button"
           onClick={onRefresh}
-          disabled={loading}
+          disabled={loading || !onRefresh}
         >
-          <RefreshCw size={16} />
+          <RefreshCw
+            size={16}
+            className={loading ? "alerts-refresh-spin" : ""}
+          />
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
@@ -68,16 +135,14 @@ function Logs({ logs = [], loading = false, onRefresh }) {
       <div className="logs-summary">
         <div>
           <span>Total logs</span>
-          <strong>{logs.length}</strong>
+          <strong>{safeLogs.length}</strong>
         </div>
+
         <div>
-          <span>Failed events</span>
-          <strong>
-            {logs.filter(
-              (log) => String(log.status || "").toLowerCase() === "failed"
-            ).length}
-          </strong>
+          <span>Failed / error events</span>
+          <strong>{failedCount}</strong>
         </div>
+
         <div>
           <span>Displayed</span>
           <strong>{filteredLogs.length}</strong>
@@ -86,15 +151,15 @@ function Logs({ logs = [], loading = false, onRefresh }) {
 
       <div className="logs-panel">
         <div className="logs-toolbar">
-          <div className="logs-search">
+          <label className="logs-search">
             <Search size={17} />
             <input
               type="search"
-              placeholder="Search message, source, or event..."
+              placeholder="Search message, source, event, or IP..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
-          </div>
+          </label>
 
           <select
             aria-label="Filter logs by status"
@@ -106,6 +171,20 @@ function Logs({ logs = [], loading = false, onRefresh }) {
             <option value="failed">Failed</option>
             <option value="success">Success</option>
           </select>
+
+          <button
+            type="button"
+            className="logs-refresh-button"
+            onClick={() =>
+              setSortOrder((previous) =>
+                previous === "newest" ? "oldest" : "newest"
+              )
+            }
+            aria-label={`Sort by ${sortOrder === "newest" ? "oldest" : "newest"} first`}
+          >
+            <ArrowDownUp size={16} />
+            {sortOrder === "newest" ? "Newest first" : "Oldest first"}
+          </button>
         </div>
 
         <div className="logs-table-wrapper">
@@ -122,22 +201,36 @@ function Logs({ logs = [], loading = false, onRefresh }) {
 
             <tbody>
               {filteredLogs.map((log, index) => {
-                const status = String(log.status || "unknown").toLowerCase();
+                const status = getStatus(log);
+                const safeStatus = status.replace(
+                  /[^a-z0-9_-]/g,
+                  "-"
+                );
 
                 return (
-                  <tr key={log._id || log.id || `${log.timestamp}-${index}`}>
+                  <tr
+                    key={
+                      log._id ||
+                      log.id ||
+                      `${log.timestamp || log.createdAt || "log"}-${index}`
+                    }
+                  >
                     <td className="logs-time">
                       {formatTime(log.timestamp || log.createdAt)}
                     </td>
+
                     <td>{log.source || log.service || "—"}</td>
+
                     <td>{log.eventType || log.event || "Event"}</td>
+
                     <td>
-                      <span className={`logs-status status-${status}`}>
+                      <span className={`logs-status status-${safeStatus}`}>
                         {status}
                       </span>
                     </td>
+
                     <td className="logs-message">
-                      {log.message || "No message provided"}
+                      {log.message || log.description || "No message provided"}
                     </td>
                   </tr>
                 );
@@ -147,9 +240,13 @@ function Logs({ logs = [], loading = false, onRefresh }) {
                 <tr>
                   <td colSpan={5} className="logs-empty">
                     <FileText size={25} />
-                    <strong>No matching logs</strong>
+                    <strong>
+                      {loading ? "Loading logs..." : "No matching logs"}
+                    </strong>
                     <span>
-                      Try another search or change the selected filter.
+                      {loading
+                        ? "Waiting for the backend response."
+                        : "Try another search or change the selected filter."}
                     </span>
                   </td>
                 </tr>
@@ -159,7 +256,7 @@ function Logs({ logs = [], loading = false, onRefresh }) {
         </div>
 
         <div className="logs-footer">
-          Showing {filteredLogs.length} of {logs.length} log entries
+          Showing {filteredLogs.length} of {safeLogs.length} log entries
         </div>
       </div>
     </section>

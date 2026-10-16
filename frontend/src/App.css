@@ -6433,3 +6433,60 @@ body {
   background: #eef2ff !important;
   color: #3730a3 !important;
 }
+
+
+.detection-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.detection-summary-item {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #2a3952;
+  border-radius: 10px;
+  background: #0b1220;
+}
+
+.detection-summary-item > span {
+  display: block;
+  margin-bottom: 10px;
+  color: #a8b8d0;
+  font-size: 13px;
+}
+
+.detection-summary-item > strong {
+  overflow-wrap: anywhere;
+  color: #f8fafc;
+  font-size: 17px;
+}
+
+.detection-summary-item p {
+  margin: 0;
+  color: #dbe5f3;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.detection-summary-item .detection-status-danger {
+  color: #f87171;
+}
+
+.detection-summary-item .detection-status-safe {
+  color: #4ade80;
+}
+
+.detection-result {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .detection-summary {
+    grid-template-columns: 1fr;
+  }
+}

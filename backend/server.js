@@ -6,6 +6,7 @@ const axios = require("axios");
 const rateLimit = require("express-rate-limit");
 const authRoutes = require("./routes/auth");
 const crypto = require("crypto");
+const pipelineRoutes = require("./routes/pipeline");
 require("dotenv").config();
 
 // ==================== MODELS & SERVICES ====================
@@ -48,6 +49,7 @@ const ingestionLimiter = rateLimit({
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/pipeline", pipelineRoutes);
 
 // ==================== API KEY AUTHENTICATION ====================
 
