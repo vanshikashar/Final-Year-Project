@@ -1,16 +1,14 @@
-
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const rateLimit = require("express-rate-limit");
+const authRoutes = require("./routes/auth");
 const crypto = require("crypto");
 require("dotenv").config();
 
 // ==================== MODELS & SERVICES ====================
-// Your current model filename is models/alert.js.
-// Use the same Alert model in eventProcessor.js.
 
 const Log = require("./models/Log");
 const Metric = require("./models/Metric");
@@ -18,13 +16,12 @@ const Alert = require("./models/Alert");
 const { processEvent } = require("./services/eventProcessor");
 
 const app = express();
-app.get("/api/test", (req, res) => {
-  console.log("TEST ENDPOINT REACHED");
-  res.json({ message: "Backend test successful" });
-});
+
 const PORT = Number(process.env.PORT) || 5000;
 
-
+const ML_SERVICE_URL = (
+  process.env.ML_SERVICE_URL || "http://127.0.0.1:8000"
+).replace(/\/+$/, "");
 
 // ==================== MIDDLEWARE ====================
 
@@ -38,6 +35,11 @@ app.use(
 
 app.use(express.json({ limit: "100kb" }));
 
+app.use((req, res, next) => {
+  console.log("REQUEST:", req.method, req.url);
+  next();
+});
+
 const ingestionLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 120,
@@ -45,24 +47,18 @@ const ingestionLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+app.use("/api/auth", authRoutes);
+
 // ==================== API KEY AUTHENTICATION ====================
 
-
 function requireIngestionKey(req, res, next) {
-  console.log("POST /api/events reached API-key middleware");
-
   const expected = process.env.INGEST_API_KEY;
   const supplied = req.get("x-api-key");
 
-  console.log("API key configured:", Boolean(expected));
-  console.log("API key received:", Boolean(supplied));
-  console.log(
-    "API key matches:",
-    Boolean(expected && supplied && expected === supplied)
-  );
-
   if (!expected || !supplied) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
   }
 
   const expectedBuffer = Buffer.from(expected);
@@ -72,17 +68,33 @@ function requireIngestionKey(req, res, next) {
     expectedBuffer.length !== suppliedBuffer.length ||
     !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)
   ) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
   }
 
   return next();
 }
 
+// ==================== BASIC ROUTES ====================
+
+app.get("/", (req, res) => {
+  return res.json({
+    status: "ok",
+    service: "cloud-security-api",
+  });
+});
+
+app.get("/api/test", (req, res) => {
+  return res.json({
+    message: "Backend test successful",
+  });
+});
 
 // ==================== HEALTH CHECK ====================
 
 app.get("/api/health", (req, res) => {
-  return res.json({
+  return res.status(200).json({
     status: "ok",
     service: "cloud-security-api",
     database:
@@ -92,11 +104,37 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ==================== EVENT INGESTION ====================
-app.use((req, res, next) => {
-  console.log("REQUEST:", req.method, req.url);
-  next();
+// ==================== ML HEALTH CHECK ====================
+
+app.get("/api/ml-health", async (req, res) => {
+  try {
+    const healthUrl = ML_SERVICE_URL + "/health";
+
+    const response = await axios.get(healthUrl, {
+      timeout: 5000,
+    });
+
+    return res.status(200).json({
+      status: "ok",
+      service: "ml-service",
+      mlService: response.data,
+    });
+  } catch (error) {
+    console.error("ML health check failed:", error.message);
+    console.error("Error code:", error.code);
+    console.error("HTTP status:", error.response?.status);
+    console.error("Response data:", error.response?.data);
+
+    return res.status(502).json({
+      status: "error",
+      service: "ml-service",
+      message: "The backend could not reach the ML health endpoint.",
+      code: error.code || null,
+    });
+  }
 });
+
+// ==================== EVENT INGESTION ====================
 
 app.post(
   "/api/events",
@@ -126,7 +164,9 @@ app.post(
         message.includes("allowed lengths") ||
         message.includes("must be between")
       ) {
-        return res.status(400).json({ error: message });
+        return res.status(400).json({
+          error: message,
+        });
       }
 
       console.error("Event processing failed:", message);
@@ -138,29 +178,49 @@ app.post(
   }
 );
 
-// ==================== DIRECT ML TEST ====================
+// ==================== DIRECT ML PREDICTION ====================
 
 app.post("/api/detect", async (req, res) => {
   try {
-    const mlUrl =
-      process.env.ML_SERVICE_URL || "http://127.0.0.1:8000";
+    console.log("Calling ML service at:", ML_SERVICE_URL + "/predict");
 
     const response = await axios.post(
-      `${mlUrl}/predict`,
+      ML_SERVICE_URL + "/predict",
       req.body,
-      { timeout: 5000 }
+      {
+        timeout: 10000,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
 
-    return res.json(response.data);
+    return res.status(200).json(response.data);
   } catch (error) {
-    console.error(
-      "ML request failed:",
-      error.response?.data || error.message
-    );
+    console.error("ML prediction request failed:", error.message);
+    console.error("Error code:", error.code);
+    console.error("HTTP status:", error.response?.status);
+    console.error("Response data:", error.response?.data);
+
+    if (error.response) {
+      return res.status(502).json({
+        error: "ML service returned an error",
+        mlStatus: error.response.status,
+        details: error.response.data,
+      });
+    }
+
+    if (error.code === "ECONNABORTED") {
+      return res.status(504).json({
+        error: "ML service request timed out",
+      });
+    }
 
     return res.status(502).json({
       error: "ML service unavailable",
-      message: "Check that the Python ML service is running on port 8000.",
+      message:
+        "Could not connect to the ML service. Check its URL and whether it is running.",
+      code: error.code || null,
     });
   }
 });
@@ -179,7 +239,10 @@ app.get("/api/logs", async (req, res) => {
       .limit(limit)
       .lean();
 
-    return res.json({ count: logs.length, logs });
+    return res.json({
+      count: logs.length,
+      logs: logs,
+    });
   } catch (error) {
     console.error("Logs query failed:", error.message);
 
@@ -203,7 +266,10 @@ app.get("/api/metrics", async (req, res) => {
       .limit(limit)
       .lean();
 
-    return res.json({ count: metrics.length, metrics });
+    return res.json({
+      count: metrics.length,
+      metrics: metrics,
+    });
   } catch (error) {
     console.error("Metrics query failed:", error.message);
 
@@ -234,14 +300,22 @@ app.get("/api/alerts", async (req, res) => {
       .limit(limit)
       .lean();
 
-    alerts.sort(
-      (a, b) =>
+    alerts.sort((a, b) => {
+      const severityDifference =
         (severityOrder[b.severity] || 0) -
-          (severityOrder[a.severity] || 0) ||
-        new Date(b.timestamp) - new Date(a.timestamp)
-    );
+        (severityOrder[a.severity] || 0);
 
-    return res.json({ count: alerts.length, alerts });
+      if (severityDifference !== 0) {
+        return severityDifference;
+      }
+
+      return new Date(b.timestamp) - new Date(a.timestamp);
+    });
+
+    return res.json({
+      count: alerts.length,
+      alerts: alerts,
+    });
   } catch (error) {
     console.error("Alerts query failed:", error.message);
 
@@ -251,7 +325,8 @@ app.get("/api/alerts", async (req, res) => {
   }
 });
 
-// Update alert status.
+// ==================== UPDATE ALERT STATUS ====================
+
 app.patch("/api/alerts/:id/status", async (req, res) => {
   const allowedStatuses = ["open", "acknowledged", "resolved"];
 
@@ -262,18 +337,29 @@ app.patch("/api/alerts/:id/status", async (req, res) => {
   }
 
   if (!mongoose.isValidObjectId(req.params.id)) {
-    return res.status(400).json({ error: "Invalid alert ID" });
+    return res.status(400).json({
+      error: "Invalid alert ID",
+    });
   }
 
   try {
     const updatedAlert = await Alert.findByIdAndUpdate(
       req.params.id,
-      { $set: { status: req.body.status } },
-      { new: true, runValidators: true }
+      {
+        $set: {
+          status: req.body.status,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
     );
 
     if (!updatedAlert) {
-      return res.status(404).json({ error: "Alert not found" });
+      return res.status(404).json({
+        error: "Alert not found",
+      });
     }
 
     return res.json({
@@ -293,19 +379,20 @@ app.patch("/api/alerts/:id/status", async (req, res) => {
 
 async function startServer() {
   if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is missing from backend/.env");
+    throw new Error("MONGODB_URI is missing");
   }
 
   if (!process.env.INGEST_API_KEY) {
-    throw new Error("INGEST_API_KEY is missing from backend/.env");
+    throw new Error("INGEST_API_KEY is missing");
   }
 
   await mongoose.connect(process.env.MONGODB_URI);
-  console.log("MongoDB Atlas connected successfully");
 
-  app.listen(PORT, "127.0.0.1", () => {
-    console.log(`Backend running at http://localhost:${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/api/health`);
+  console.log("MongoDB Atlas connected successfully");
+  console.log("ML service URL:", ML_SERVICE_URL);
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log("Backend running on port " + PORT);
   });
 }
 

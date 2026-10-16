@@ -5146,3 +5146,393 @@ button:disabled {
 .detection-info > small {
   margin-top: 14px;
 }
+
+/* =========================================================
+   DEFINITIVE APP LAYOUT FIX
+   Keep this section at the very end of App.css.
+   ========================================================= */
+
+:root {
+  --sidebar-width: 260px;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app-layout {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: clip;
+  background: #0b1220;
+}
+
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex: 0 0 var(--sidebar-width);
+  flex-direction: column;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
+  height: 100vh;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: #111b2e;
+  border-right: 1px solid #273449;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
+}
+
+.app-sidebar.sidebar-open {
+  transform: translateX(0);
+}
+
+.app-sidebar.sidebar-closed {
+  transform: translateX(-100%);
+}
+
+.app-main {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: calc(100% - var(--sidebar-width));
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0 0 0 var(--sidebar-width);
+  padding: 0;
+  overflow-x: clip;
+  background: #0b1220;
+}
+
+.app-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  min-height: 76px;
+  margin: 0;
+  padding: 14px 26px;
+  box-sizing: border-box;
+  background: #111b2e;
+  border-bottom: 1px solid #273449;
+  color: #e8edf8;
+}
+
+.navbar-left,
+.navbar-right {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.navbar-left {
+  flex: 1 1 auto;
+}
+
+.navbar-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+.app-navbar button {
+  flex-shrink: 0;
+}
+
+.app-content {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 28px;
+  box-sizing: border-box;
+}
+
+.dashboard-page,
+.alerts-page,
+.logs-page,
+.pipeline-page,
+.placeholder-page {
+  width: 100%;
+  min-width: 0;
+  max-width: 1600px;
+  margin-right: auto;
+  margin-left: auto;
+  box-sizing: border-box;
+}
+
+.dashboard-metrics-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 1000px) {
+  .app-sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
+    transform: translateX(-100%);
+  }
+
+  .app-sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  .app-sidebar.sidebar-closed {
+    transform: translateX(-100%);
+  }
+
+  .app-main {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .app-navbar {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: block;
+    background: rgb(2 6 23 / 65%);
+    border: 0;
+  }
+
+  .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sidebar-close-button {
+    display: grid;
+    place-items: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-content {
+    padding: 16px 13px;
+  }
+
+  .app-navbar {
+    gap: 8px;
+    min-height: 64px;
+    padding: 10px 12px;
+  }
+
+  .navbar-left,
+  .navbar-right {
+    gap: 7px;
+  }
+
+  .dashboard-metrics-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-welcome,
+  .alerts-page-heading,
+  .logs-page-header,
+  .pipeline-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .navbar-brand-text small {
+    display: none;
+  }
+}
+
+/* =========================================================
+   FINAL DESKTOP + MOBILE LAYOUT OVERRIDES
+   ========================================================= */
+:root {
+  --sidebar-width: 325px;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app-layout {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: #0b1220;
+}
+
+.app-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
+  height: 100vh;
+  min-height: 100vh;
+  padding: 22px 18px 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: #111b2e;
+  border-right: 1px solid #273449;
+  transition: transform 0.25s ease;
+}
+
+.app-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: calc(100% - var(--sidebar-width));
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0 0 0 var(--sidebar-width);
+  padding: 0;
+  background: #0b1220;
+}
+
+.app-content {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 28px 32px;
+  box-sizing: border-box;
+}
+
+.dashboard-page,
+.alerts-page,
+.logs-page,
+.pipeline-page,
+.placeholder-page {
+  width: 100%;
+  min-width: 0;
+  max-width: 1600px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* The sidebar must stay visible on desktop, even if React adds
+   the sidebar-closed class while switching pages. */
+@media (min-width: 1001px) {
+  .app-sidebar,
+  .app-sidebar.sidebar-open,
+  .app-sidebar.sidebar-closed {
+    transform: translateX(0) !important;
+  }
+
+  .app-main {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+
+  .sidebar-overlay {
+    display: none !important;
+  }
+
+  .sidebar-close-button {
+    display: none !important;
+  }
+}
+
+/* Tablet and mobile: drawer sidebar, opened by the menu button. */
+@media (max-width: 1000px) {
+  .app-sidebar {
+    width: min(325px, 86vw);
+    min-width: 0;
+    max-width: 86vw;
+    transform: translateX(-100%);
+    box-shadow: 18px 0 45px rgb(0 0 0 / 28%);
+  }
+
+  .app-sidebar.sidebar-open {
+    transform: translateX(0) !important;
+  }
+
+  .app-sidebar.sidebar-closed {
+    transform: translateX(-100%) !important;
+  }
+
+  .app-main {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .app-content {
+    padding: 24px 20px;
+  }
+
+  .sidebar-close-button {
+    display: grid;
+    place-items: center;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: block;
+    background: rgb(2 6 23 / 65%);
+    border: 0;
+  }
+
+  .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .app-content {
+    padding: 17px 13px;
+  }
+
+  .dashboard-metrics-grid,
+  .placeholder-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

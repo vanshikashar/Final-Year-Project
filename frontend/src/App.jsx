@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Alerts from "./pages/Alerts.jsx";
 import Logs from "./pages/Logs.jsx";
 import Pipeline from "./pages/Pipeline.jsx";
+import AuthGate from "./auth/AuthGate.jsx";
 
 import {
   getHealth,
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   "Application Logs",
   "ML Detection",
   "DevOps Pipeline",
+  "My Account",
 ];
 
 const INITIAL_METRICS = {
@@ -36,6 +38,9 @@ const INITIAL_METRICS = {
   networkTraffic: 0,
   errorCount: 0,
 };
+
+const PROJECT_URL =
+  "https://github.com/vanshikashar/Final-Year-Project";
 
 const isResolved = (alert) =>
   ["resolved", "closed"].includes(
@@ -112,11 +117,10 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState("");
   const [detectionResult, setDetectionResult] = useState(null);
 
-  // Keep the latest alerts available without recreating the fetch callback.
   const alertsRef = useRef([]);
+
   alertsRef.current = alerts;
 
-  // Fetch the backend data. This callback stays stable between renders.
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
 
@@ -215,12 +219,10 @@ export default function App() {
     }
   }, []);
 
-  // Run once on mount. The stable callback prevents a fetch loop.
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // Resolve a security alert.
   const handleResolveAlert = async (alertId) => {
     if (!alertId) return;
 
@@ -252,7 +254,6 @@ export default function App() {
     }
   };
 
-  // Call the backend anomaly-detection endpoint.
   const handleRunDetection = async () => {
     if (detecting) return;
 
@@ -272,7 +273,6 @@ export default function App() {
 
       setDetectionResult(result);
 
-      // Refresh after detection; errors here are handled by the refresh function.
       await fetchDashboardData();
     } catch (error) {
       console.error("Anomaly detection failed:", error);
@@ -290,6 +290,7 @@ export default function App() {
     if (NAV_ITEMS.includes(page)) {
       setActivePage(page);
       setSidebarOpen(false);
+      setErrorMessage("");
     }
   };
 
@@ -340,22 +341,27 @@ export default function App() {
                 <span>CPU Usage</span>
                 <strong>{metrics.cpu}%</strong>
               </div>
+
               <div>
                 <span>Memory Usage</span>
                 <strong>{metrics.memory}%</strong>
               </div>
+
               <div>
                 <span>Requests Processed</span>
                 <strong>{metrics.requests.toLocaleString()}</strong>
               </div>
+
               <div>
                 <span>Failed Logins</span>
                 <strong>{metrics.failedLogins}</strong>
               </div>
+
               <div>
                 <span>Network Traffic</span>
                 <strong>{metrics.networkTraffic}</strong>
               </div>
+
               <div>
                 <span>Error Count</span>
                 <strong>{metrics.errorCount}</strong>
@@ -377,6 +383,7 @@ export default function App() {
         return (
           <section className="placeholder-page">
             <h1>ML Anomaly Detection</h1>
+
             <p>
               Submit the latest system metrics to your backend
               anomaly-detection endpoint.
@@ -407,8 +414,8 @@ export default function App() {
               )}
 
               <small>
-                The result shown here comes from the backend response.
-                A real prediction requires a working detection service.
+                The result comes from the backend response and its
+                connected ML detection service.
               </small>
             </div>
           </section>
@@ -422,6 +429,51 @@ export default function App() {
           />
         );
 
+      case "My Account":
+        return (
+          <section className="placeholder-page">
+            <h1>My Account</h1>
+            <p>
+              Account information for the Cloud Security DevOps Platform.
+            </p>
+
+            <div className="detection-info">
+              <h3>Profile information</h3>
+
+              <div className="account-details">
+                <p>
+                  <strong>Username:</strong>{" "}
+                  {localStorage.getItem("userName") || "User"}
+                </p>
+
+                <p>
+                  <strong>Application:</strong>{" "}
+                  Cloud Security DevOps Platform
+                </p>
+
+                <p>
+                  <strong>Backend connection:</strong>{" "}
+                  {connected ? "Connected" : "Unavailable"}
+                </p>
+
+                <p>
+                  <strong>Unresolved security alerts:</strong>{" "}
+                  {unresolvedAlerts.length}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="detection-button"
+                onClick={fetchDashboardData}
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "Refresh Account Status"}
+              </button>
+            </div>
+          </section>
+        );
+
       default:
         return (
           <section className="placeholder-page">
@@ -432,7 +484,8 @@ export default function App() {
     }
   };
 
-  return (
+ return (
+  <AuthGate>
     <div className="app-layout">
       <Sidebar
         activePage={activePage}
@@ -451,13 +504,15 @@ export default function App() {
           onMenuClick={() =>
             setSidebarOpen((previous) => !previous)
           }
-          alertCount={unresolvedAlerts.length}
+          alerts={alerts}
+          onNavigate={navigateTo}
         />
 
         <main className="app-content">
           {errorMessage && (
             <div className="app-error-message" role="alert">
               <span>{errorMessage}</span>
+
               <button
                 type="button"
                 onClick={() => setErrorMessage("")}
@@ -472,5 +527,6 @@ export default function App() {
         </main>
       </div>
     </div>
+  </AuthGate>
   );
 }
