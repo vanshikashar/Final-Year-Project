@@ -28,3 +28,19 @@ build/
 
 # Logs and local databases
 *.log
+
+@"
+
+# Terraform generated files
+**/.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+crash.log
+"@ | Add-Content .gitignore
+# Terraform generated files
+**/.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+crash.log

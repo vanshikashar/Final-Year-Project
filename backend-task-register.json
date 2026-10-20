@@ -1,0 +1,80 @@
+{
+    "containerDefinitions":  [
+                                 {
+                                     "name":  "backend",
+                                     "image":  "864899835094.dkr.ecr.ap-south-1.amazonaws.com/fyp-backend:b7ee256",
+                                     "cpu":  0,
+                                     "portMappings":  [
+                                                          {
+                                                              "containerPort":  5000,
+                                                              "hostPort":  5000,
+                                                              "protocol":  "tcp",
+                                                              "name":  "backend-5000-tcp",
+                                                              "appProtocol":  "http"
+                                                          }
+                                                      ],
+                                     "essential":  true,
+                                     "environment":  [
+                                                         {
+                                                             "name":  "ML_SERVICE_URL",
+                                                             "value":  "http://172.31.24.9:8000"
+                                                         }
+                                                     ],
+                                     "environmentFiles":  [
+
+                                                          ],
+                                     "mountPoints":  [
+
+                                                     ],
+                                     "volumesFrom":  [
+
+                                                     ],
+                                     "secrets":  [
+                                                     {
+                                                         "name":  "INGEST_API_KEY",
+                                                         "valueFrom":  "arn:aws:secretsmanager:ap-south-1:864899835094:secret:fyp/ingest-api-key-ASVY5K"
+                                                     },
+                                                     {
+                                                         "name":  "MONGODB_URI",
+                                                         "valueFrom":  "arn:aws:secretsmanager:ap-south-1:864899835094:secret:fyp/mongodb-uri-voEz6a:MONGODB_URI::"
+                                                     }
+                                                 ],
+                                     "ulimits":  [
+
+                                                 ],
+                                     "logConfiguration":  {
+                                                              "logDriver":  "awslogs",
+                                                              "options":  {
+                                                                              "awslogs-group":  "/ecs/fyp-backend-task",
+                                                                              "awslogs-create-group":  "true",
+                                                                              "awslogs-region":  "ap-south-1",
+                                                                              "awslogs-stream-prefix":  "ecs"
+                                                                          },
+                                                              "secretOptions":  [
+
+                                                                                ]
+                                                          },
+                                     "systemControls":  [
+
+                                                        ]
+                                 }
+                             ],
+    "family":  "fyp-backend-task",
+    "executionRoleArn":  "arn:aws:iam::864899835094:role/ecsTaskExecutionRole",
+    "networkMode":  "awsvpc",
+    "volumes":  [
+
+                ],
+    "placementConstraints":  [
+
+                             ],
+    "runtimePlatform":  {
+                            "cpuArchitecture":  "X86_64",
+                            "operatingSystemFamily":  "LINUX"
+                        },
+    "requiresCompatibilities":  [
+                                    "FARGATE"
+                                ],
+    "cpu":  "1024",
+    "memory":  "3072"
+}

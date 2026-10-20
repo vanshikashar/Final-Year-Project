@@ -1,0 +1,5 @@
+encryptionsalt: v1:cDWXEh8XfAE=:v1:k8GwDq7JTDeBh3W/:U0VBw7IvT1Cll8Oh9tm24cSu5/P4ug==
+config:
+  sentinelops-infrastructure:awsRegion: ap-south-1
+  sentinelops-infrastructure:namespaceName: sentinelops.local
+  sentinelops-infrastructure:mlServiceName: ml-service

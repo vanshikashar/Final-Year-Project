@@ -1,0 +1,4 @@
+
+name: sentinelops-infrastructure
+runtime: nodejs
+description: AWS infrastructure components for SentinelOps

@@ -1,0 +1,13 @@
+{
+  "name": "sentinelops-infrastructure",
+  "version": "1.0.0",
+  "private": true,
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^6.0.0",
+    "@pulumi/pulumi": "^3.0.0"
+  }
+}
