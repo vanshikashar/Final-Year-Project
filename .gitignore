@@ -28,3 +28,10 @@ build/
 
 # Logs and local databases
 *.log
+
+# Terraform generated files
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
