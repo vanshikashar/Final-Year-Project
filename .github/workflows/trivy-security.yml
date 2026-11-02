@@ -25,6 +25,7 @@ jobs:
       - name: Scan with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
+          version: v0.76.1
           scan-type: fs
           scan-ref: .
           scanners: vuln,secret
@@ -44,6 +45,7 @@ jobs:
       - name: Scan configuration
         uses: aquasecurity/trivy-action@v0.36.0
         with:
+          version: v0.76.1
           scan-type: config
           scan-ref: .
           severity: HIGH,CRITICAL
