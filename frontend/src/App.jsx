@@ -444,15 +444,16 @@ export default function App() {
 
       <div className="app-main">
         <Navbar
-          title={activePage}
-          connected={connected}
-          loading={loading || detecting}
-          onRefresh={fetchDashboardData}
-          onMenuClick={() =>
-            setSidebarOpen((previous) => !previous)
-          }
-          alertCount={unresolvedAlerts.length}
-        />
+  title={activePage}
+  connected={connected}
+  loading={loading || detecting}
+  onRefresh={fetchDashboardData}
+  onMenuClick={() =>
+    setSidebarOpen((previous) => !previous)
+  }
+  alertCount={unresolvedAlerts.length}
+  alerts={unresolvedAlerts}
+/>
 
         <main className="app-content">
           {errorMessage && (
