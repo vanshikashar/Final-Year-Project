@@ -1,16 +1,16 @@
 
-name: Final Year Project CI
+name: SentinelOps CI
 
 on:
   push:
     branches:
-      - develop
       - main
+      - develop
 
   pull_request:
     branches:
-      - develop
       - main
+      - develop
 
   workflow_dispatch:
   workflow_call:
